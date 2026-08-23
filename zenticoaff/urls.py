@@ -17,6 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from affiliate import views
+
 urlpatterns = [
+    path('', views.home, name='home'),
+    path('go/<slug:slug>/', views.go_to_affiliate, name='affiliate-redirect'),
     path('admin/', admin.site.urls),
 ]

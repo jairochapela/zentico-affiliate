@@ -1,0 +1,53 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zentico Affiliate</title>
+    <link rel="stylesheet" href="{% static 'affiliate/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-content">
+            <a class="brand" href="{% url 'home' %}">Zentico <span>Affiliate</span></a>
+            <span class="header-note">Recursos seleccionados para crecer</span>
+        </div>
+    </header>
+
+    <main>
+        <section class="intro container">
+            <p class="eyebrow">ZENTICO SOLUTIONS / RECURSOS</p>
+            <h1>Herramientas que mueven tus ideas.</h1>
+            <p class="intro-copy">Descubre servicios y productos recomendados por nuestro equipo para trabajar mejor en digital.</p>
+        </section>
+
+        <section class="links-section container" aria-labelledby="links-title">
+            <div class="section-heading">
+                <h2 id="links-title">Enlaces destacados</h2>
+                <span class="section-rule"></span>
+            </div>
+            {% if links %}
+                <div class="link-list">
+                    {% for link in links %}
+                        <article class="link-item">
+                            <div>
+                                <p class="advertiser">{{ link.advertiser }}</p>
+                                <h3>{{ link.name }}</h3>
+                            </div>
+                            <div class="link-meta">
+                                <span>{{ link.clicks }} clic{{ link.clicks|pluralize }}</span>
+                                <a class="link-button" href="{% url 'affiliate-redirect' link.slug %}">Visitar <span aria-hidden="true">&#8594;</span></a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">Todavía no hay enlaces disponibles.</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer class="site-footer container">Zentico Solutions <span>/</span> Affiliate resources</footer>
+</body>
+</html>

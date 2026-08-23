@@ -10,22 +10,34 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+from urllib.parse import parse_qsl, urlparse
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ljewp-kfp*6qd1!*o2sww&%k@1if$gp9bqw#dfh-!lp4)o#qy6'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-development-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in {'1', 'true', 'yes', 'on'}
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
+
+APP_ENV = os.environ.get('APP_ENV', 'development')
+APP_URL = os.environ.get('APP_URL', 'http://127.0.0.1:8000')
 
 
 # Application definition
@@ -37,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'affiliate',
 ]
 
 MIDDLEWARE = [
@@ -72,12 +85,30 @@ WSGI_APPLICATION = 'zenticoaff.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+def database_from_url(database_url):
+    if not database_url:
+        return {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+
+    parsed_url = urlparse(database_url)
+    if parsed_url.scheme in {'postgres', 'postgresql'}:
+        database = {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': parsed_url.path.removeprefix('/'),
+            'USER': parsed_url.username or '',
+            'PASSWORD': parsed_url.password or '',
+            'HOST': parsed_url.hostname or '',
+            'PORT': str(parsed_url.port or ''),
+        }
+        database.update(dict(parse_qsl(parsed_url.query)))
+        return database
+
+    raise ValueError('DATABASE_URL must use postgres:// or postgresql://')
+
+
+DATABASES = {'default': database_from_url(os.environ.get('DATABASE_URL'))}
 
 
 # Password validation
